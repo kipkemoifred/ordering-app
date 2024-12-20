@@ -1,22 +1,55 @@
-# docker-compose.yml
-version: '3'
+version: '3.8'
+
 services:
+  # PHP + Apache container
   app:
-    build: .
-    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    ports:
+      - "8000:80"
     volumes:
-      - .:/var/www
+      - .:/var/www/html
     networks:
-      - app_network
-  db:
-    image: postgres
-    container_name: db
+      - app-network
+    depends_on:
+      - db
     environment:
-      POSTGRES_DB: app_db
-      POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: secret
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=laravel
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+
+  # PostgreSQL container
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: laravel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - app_network
+      - app-network
+    ports:
+      - "5432:5432"
+
+  # Redis container (optional for caching, queues)
+  redis:
+    image: redis:alpine
+    container_name: redis
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+
+# Volumes for persistent data
+volumes:
+  postgres_data:
+
+# Define the network
 networks:
-  app_network:
+  app-network:
     driver: bridge
