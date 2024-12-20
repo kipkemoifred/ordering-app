@@ -3,7 +3,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
-use Redis;
+// use Redis;
+use Illuminate\Support\Facades\Redis;
+
 
 class OrderController extends Controller
 {
@@ -22,10 +24,13 @@ class OrderController extends Controller
         $order = Order::create([
             'cart_id' => $cartId,
             'items' => json_encode($validated['items']),
+            'order_name' => 'Order_' . uniqid(),
             'total_price' => $this->calculateTotalPrice($validated['items']),
         ]);
 
-        // Clear the cart in Redis
+        echo "order " ;
+
+           // Clear the cart in Redis
         Redis::del("cart:$cartId");
 
         return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
